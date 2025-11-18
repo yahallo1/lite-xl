@@ -472,8 +472,14 @@ end
 
 
 function DocView:draw_caret(x, y)
+  -- local lh = self:get_line_height()
+  -- renderer.draw_rect(x, y, style.caret_width, lh, style.caret)
+  self:draw_block(x, y)
+end
+
+function DocView:draw_block(x, y)
   local lh = self:get_line_height()
-  renderer.draw_rect(x, y, style.caret_width, lh, style.caret)
+  renderer.draw_rect(x, y, self:get_font():get_width("m"), lh, style.caret)
 end
 
 function DocView:draw_line_body(line, x, y)
