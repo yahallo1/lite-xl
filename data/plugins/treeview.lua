@@ -577,6 +577,7 @@ function core.on_quit_project()
 end
 
 local function is_project_folder(item)
+  if item == nil then return false end
   return item.abs_filename == item.project.path
 end
 
