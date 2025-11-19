@@ -305,7 +305,7 @@ static GlyphMetric *font_load_glyph_metric(RenFont *font, unsigned int glyph_id,
       }
       GlyphMetric *metric = &font->glyphs.metrics[i][row][col];
       metric->flags |= EGlyphXAdvance;
-      metric->xadvance = font->face->glyph->advance.x / 64.0f;
+      metric->xadvance = (font->face->glyph->advance.x)/ 64.0f - 1.0;
     }
   }
   return &font->glyphs.metrics[bitmap_idx][row][col];
