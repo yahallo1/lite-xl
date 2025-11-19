@@ -207,7 +207,7 @@ command.add(nil, {
         for i, name in ipairs(matched) do
           res[i] = {
             text = command.prettify_name(name),
-            info = keymap.get_binding(name),
+            info = keymap.get_binding_for_drawing(name),
             command = name,
           }
         end

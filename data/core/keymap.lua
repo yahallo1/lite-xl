@@ -187,6 +187,15 @@ function keymap.get_binding(cmd)
   return table.unpack(keymap.reverse_map[cmd] or {})
 end
 
+function keymap.get_binding_for_drawing(cmd)
+  local bindings = keymap.reverse_map[cmd] or {}
+  local copy_bindings = {}
+  for i,v in ipairs(bindings) do
+    copy_bindings[i] = string.gsub(bindings[i],"ctrl", "C"):gsub("alt", "M"):gsub("+","-"):gsub("shift", "S")
+  end
+  return table.unpack(copy_bindings)
+end
+
 
 ---Returns all the shortcuts associated to a command packed in a table.
 ---@param cmd string

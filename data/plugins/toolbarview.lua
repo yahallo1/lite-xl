@@ -122,7 +122,7 @@ function ToolbarView:on_mouse_moved(px, py, ...)
     y_min, y_max = y, y + h
     if px > x and py > y and px <= x + w and py <= y + h then
       self.hovered_item = item
-      local binding = keymap.get_binding(item.command)
+      local binding = keymap.get_binding_for_drawing(item.command)
       local name = command.prettify_name(item.command)
       core.status_view:show_tooltip(binding and { name, style.dim, "  ", binding } or { name })
       self.tooltip = true
