@@ -73,6 +73,6 @@ command.add(nil, {
   end
 })
 
-keymap.add({
-  [PLATFORM == "Mac OS X" and "cmd+p" or "ctrl+p"] = "core:find-file"
-})
+--keymap.add({
+--  [PLATFORM == "Mac OS X" and "cmd+p" or "ctrl+p"] = "core:find-file"
+--})
