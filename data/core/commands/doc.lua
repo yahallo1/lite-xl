@@ -211,6 +211,7 @@ local function block_comment(comment, line1, col1, line2, col2)
 end
 
 local function insert_paste(doc, value, whole_line, idx)
+  if value == "" then return end
   if whole_line then
     local line1, col1 = doc:get_selection_idx(idx)
     doc:insert(line1, 1, value:gsub("\r", "").."\n")
