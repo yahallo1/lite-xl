@@ -471,15 +471,17 @@ function DocView:draw_overwrite_caret(x, y, width)
 end
 
 
-function DocView:draw_caret(x, y)
+function DocView:draw_caret(x, y, line, col)
   -- local lh = self:get_line_height()
   -- renderer.draw_rect(x, y, style.caret_width, lh, style.caret)
-  self:draw_block(x, y)
+  self:draw_block(x, y, line, col)
 end
 
-function DocView:draw_block(x, y)
+function DocView:draw_block(x, y, line, col)
   local lh = self:get_line_height()
   renderer.draw_rect(x, y, self:get_font():get_width("m"), lh, style.caret)
+  local char = self.doc:get_text(line, col, line, col+1)
+  renderer.draw_text(style.code_font, char, x, y, style.background)
 end
 
 function DocView:draw_line_body(line, x, y)
@@ -559,7 +561,7 @@ function DocView:draw_ime_decoration(line1, col1, line2, col2)
     line_size = style.caret_width
     renderer.draw_rect(x + math.min(x1, x2), y + lh - line_size, math.abs(x1 - x2), line_size, style.caret)
   end
-  self:draw_caret(x + x1, y)
+  self:draw_caret(x + x1, y, line1, col1)
 end
 
 
@@ -580,7 +582,7 @@ function DocView:draw_overlay()
             if self.doc.overwrite then
               self:draw_overwrite_caret(x, y, self:get_font():get_width(self.doc:get_char(line1, col1)))
             else
-              self:draw_caret(x, y)
+              self:draw_caret(x, y, line1, col1)
             end
           end
         end

@@ -591,6 +591,7 @@ local function treeitem() return view.hovered_item or view.selected_item end
 function TreeView:on_context_menu()
   return { items = {
     { text = "Open in System", command = "treeview:open-in-system" },
+    { text = "Open in Terminal", command = "treeview:open-in-terminal" },
     ContextMenu.DIVIDER,
     { text = "Rename", command = "treeview:rename" },
     { text = "Delete", command = "treeview:delete" },
@@ -861,6 +862,16 @@ command.add(
       system.exec(string.format("open %q", item.abs_filename))
     elseif PLATFORM == "Linux" or string.find(PLATFORM, "BSD") then
       system.exec(string.format("xdg-open %q", item.abs_filename))
+    end
+  end,
+  
+  ["treeview:open-in-terminal"] = function(item)
+    if PLATFORM == "Windows" then
+     -- system.exec(string.format("start \"\" %q", item.abs_filename))
+    elseif string.find(PLATFORM, "Mac") then
+    -- system.exec(string.format("open %q", item.abs_filename))
+    elseif PLATFORM == "Linux" or string.find(PLATFORM, "BSD") then
+      system.exec(string.format("io.elementary.terminal -w %q", item.abs_filename))
     end
   end
 })
