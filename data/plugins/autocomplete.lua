@@ -16,7 +16,7 @@ local cache = setmetatable({}, { __mode = "k" })
 
 config.plugins.autocomplete = common.merge({
   -- Amount of characters that need to be written for autocomplete
-  min_len = 3,
+  min_len = 1,
   -- The max amount of visible items
   max_height = 6,
   -- The max amount of scrollable items
@@ -41,7 +41,7 @@ config.plugins.autocomplete = common.merge({
       description = "Amount of characters that need to be written for autocomplete to popup.",
       path = "min_len",
       type = "number",
-      default = 3,
+      default = 1,
       min = 1,
       max = 5
     },
@@ -682,7 +682,7 @@ local function show_autocomplete()
     -- update partial symbol and suggestions
     partial = get_partial_symbol()
 
-    if #partial >= config.plugins.autocomplete.min_len or triggered_manually then
+    if #partial >= 1 or triggered_manually then
       update_suggestions()
 
       if not triggered_manually then
@@ -799,7 +799,7 @@ function autocomplete.complete(completions, on_close)
 end
 
 function autocomplete.can_complete()
-  if #partial >= config.plugins.autocomplete.min_len then
+  if #partial >= 1 then
     return true
   end
   return false
