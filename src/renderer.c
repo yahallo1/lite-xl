@@ -124,6 +124,7 @@ typedef struct RenFont {
   ERenFontAntialiasing antialiasing;
   ERenFontHinting hinting;
   unsigned char style;
+  int is_bitmap;
   char path[];
 } RenFont;
 
@@ -305,7 +306,7 @@ static GlyphMetric *font_load_glyph_metric(RenFont *font, unsigned int glyph_id,
       }
       GlyphMetric *metric = &font->glyphs.metrics[i][row][col];
       metric->flags |= EGlyphXAdvance;
-      metric->xadvance = (font->face->glyph->advance.x)/ 64.0f - 1.0;
+      metric->xadvance = (font->face->glyph->advance.x)/ 64.0f;
     }
   }
   return &font->glyphs.metrics[bitmap_idx][row][col];
@@ -319,7 +320,9 @@ static SDL_Surface *font_load_glyph_bitmap(RenFont *font, unsigned int glyph_id,
   // render the glyph for a bitmap_idx
   unsigned int load_option = font_set_load_options(font), render_option = font_set_render_options(font);
   FT_GlyphSlot slot = font->face->glyph;
-  if (FT_Load_Glyph(font->face, glyph_id, load_option | FT_LOAD_BITMAP_METRICS_ONLY) != 0
+  if (font->is_bitmap) {
+    FT_Load_Glyph(font->face, glyph_id, FT_LOAD_RENDER);
+  } else if (FT_Load_Glyph(font->face, glyph_id, load_option | FT_LOAD_BITMAP_METRICS_ONLY) != 0
       || font_set_style(&slot->outline, bitmap_idx * (64 / SUBPIXEL_BITMAPS_CACHED), font->style) != 0
       || FT_Render_Glyph(slot, render_option) != 0)
     return NULL;
@@ -345,17 +348,29 @@ static SDL_Surface *font_load_glyph_bitmap(RenFont *font, unsigned int glyph_id,
   // find the best surface to copy the glyph over, and copy it
   SDL_Surface *surface = font_allocate_glyph_surface(font, slot, bitmap_idx, metric);
   uint8_t* pixels = surface->pixels;
-  for (unsigned int line = 0; line < slot->bitmap.rows; ++line) {
-    int target_offset = surface->pitch * (line + metric->y0); // x0 is always assumed to be 0
-    int source_offset = line * slot->bitmap.pitch;
-    if (font->antialiasing == FONT_ANTIALIASING_NONE) {
-      for (unsigned int column = 0; column < slot->bitmap.width; ++column) {
-        int current_source_offset = source_offset + (column / 8);
-        int source_pixel = slot->bitmap.buffer[current_source_offset];
-        pixels[++target_offset] = ((source_pixel >> (7 - (column % 8))) & 0x1) * 0xFF;
+  if (slot->bitmap.pixel_mode != FT_PIXEL_MODE_MONO) {
+    for (unsigned int line = 0; line < slot->bitmap.rows; ++line) {
+      int target_offset = surface->pitch * (line + metric->y0); // x0 is always assumed to be 0
+      int source_offset = line * slot->bitmap.pitch;
+      if (font->antialiasing == FONT_ANTIALIASING_NONE) {
+        for (unsigned int column = 0; column < slot->bitmap.width; ++column) {
+          int current_source_offset = source_offset + (column / 8);
+          int source_pixel = slot->bitmap.buffer[current_source_offset];
+          pixels[++target_offset] = ((source_pixel >> (7 - (column % 8))) & 0x1) * 0xFF;
+        }
+      } else {
+        memcpy(&pixels[target_offset], &slot->bitmap.buffer[source_offset], slot->bitmap.width);
       }
-    } else {
-      memcpy(&pixels[target_offset], &slot->bitmap.buffer[source_offset], slot->bitmap.width);
+    }
+  } else {
+    for (int y = 0; y < slot->bitmap.rows; y++) {
+      for (int x = 0; x < slot->bitmap.width; x++) {
+        if (slot->bitmap.buffer[y * slot->bitmap.pitch + x / 8] & (0b1 << (7 - (x % 8)))) {
+          pixels[surface->pitch * (y + metric->y0) + x] = 0xFF; 
+        } else {
+          pixels[surface->pitch * (y + metric->y0) + x] = 0x00;
+        }
+      }
     }
   }
   return surface;
@@ -458,7 +473,7 @@ static int font_set_face_metrics(RenFont *font, FT_Face face) {
   return 0;
 }
 
-RenFont* ren_font_load(const char* path, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, unsigned char style) {
+RenFont* ren_font_load(const char* path, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, unsigned char style, int is_bitmap) {
   FT_Error err = FT_Err_Ok;
   SDL_IOStream *file = NULL; RenFont *font = NULL;
   FT_Face face = NULL; FT_Stream stream = NULL;
@@ -474,6 +489,7 @@ RenFont* ren_font_load(const char* path, float size, ERenFontAntialiasing antial
   font->hinting = hinting;
   font->style = style;
   font->tab_size = 2;
+  font->is_bitmap = is_bitmap;
 #ifdef LITE_USE_SDL_RENDERER
   font->scale = 1;
 #endif
@@ -501,12 +517,12 @@ failure:
   return NULL;
 }
 
-RenFont* ren_font_copy(RenFont* font, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, int style) {
+RenFont* ren_font_copy(RenFont* font, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, int style, int is_bitmap) {
   antialiasing = antialiasing == -1 ? font->antialiasing : antialiasing;
   hinting = hinting == -1 ? font->hinting : hinting;
   style = style == -1 ? font->style : style;
 
-  return ren_font_load(font->path, size, antialiasing, hinting, style); // SDL_SetError() will be called appropriately
+  return ren_font_load(font->path, size, antialiasing, hinting, style, is_bitmap); // SDL_SetError() will be called appropriately
 }
 
 const char* ren_font_get_path(RenFont *font) {

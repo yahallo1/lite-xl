@@ -25,8 +25,8 @@ typedef struct { SDL_Surface *surface; int scale; } RenSurface;
 struct RenWindow;
 typedef struct RenWindow RenWindow;
 
-RenFont* ren_font_load(const char *filename, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, unsigned char style);
-RenFont* ren_font_copy(RenFont* font, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, int style);
+RenFont* ren_font_load(const char *filename, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, unsigned char style, int is_bitmap);
+RenFont* ren_font_copy(RenFont* font, float size, ERenFontAntialiasing antialiasing, ERenFontHinting hinting, int style, int is_bitmap);
 const char* ren_font_get_path(RenFont *font);
 void ren_font_free(RenFont *font);
 int ren_font_group_get_tab_size(RenFont **font);
