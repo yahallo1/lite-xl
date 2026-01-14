@@ -171,6 +171,7 @@ function RootView:on_mouse_pressed(button, x, y, clicks)
   if self.grab then
     self:on_mouse_released(self.grab.button, x, y)
   end
+
   if self.context_menu:on_mouse_pressed(button, x, y, clicks) then
     return true
   end
@@ -231,6 +232,17 @@ end
 ---@param x number
 ---@param y number
 function RootView:on_mouse_released(button, x, y, ...)
+  if button == "left" and self.my_drag then
+    if self.my_drag.on_released then
+      self.my_drag.on_released()
+    end
+    local node = self.root_node:get_child_overlapping_point(x, y)
+    if node and node.active_view.on_drag_released then 
+      node.active_view:on_drag_released(self.my_drag, x, y)
+    end
+    self.my_drag = nil
+  end
+
   if self.grab then
     if self.grab.button == button then
       local grabbed_view = self.grab.view
@@ -380,6 +392,10 @@ function RootView:on_mouse_left()
   if self.overlapping_view then
     self.overlapping_view:on_mouse_left()
   end
+end
+
+function RootView:start_a_drag(t)
+  self.my_drag = t
 end
 
 
@@ -643,6 +659,9 @@ function RootView:draw()
     self:draw_grabbed_tab()
   end
   self.context_menu:draw()
+  if self.my_drag and self.my_drag.on_draw_overlay then
+    self.my_drag:on_draw_overlay()
+  end
   if core.cursor_change_req then
     system.set_cursor(core.cursor_change_req)
     core.cursor_change_req = nil
