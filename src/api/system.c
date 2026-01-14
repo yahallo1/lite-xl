@@ -636,13 +636,26 @@ static SDL_EnumerationResult list_dir_enumeration_callback(void *userdata, const
 
 static int f_list_dir(lua_State *L) {
   const char *path = luaL_checkstring(L, 1);
-  lua_newtable(L);
-  bool res = SDL_EnumerateDirectory(path, list_dir_enumeration_callback, L);
-  if (!res) {
+  DIR *dir = opendir(path);   // try any path here
+  if (!dir) {
     lua_pushnil(L);
-    lua_pushstring(L, SDL_GetError());
+    lua_pushstring(L, "Could not open directory");
     return 2;
   }
+
+  lua_newtable(L);
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    const char *fname = entry->d_name;
+    if (!strcmp(fname, ".") || !strcmp(fname, ".."))
+      continue;
+    
+    int len = lua_rawlen(L, -1);
+    lua_pushstring(L, fname);
+    lua_rawseti(L, -2, len + 1);
+  }
+
+  closedir(dir);
   return 1;
 }
 
