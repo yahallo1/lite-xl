@@ -65,6 +65,7 @@ local function save_view(view)
     }
   end
   if mt == LogView then return end
+  if tostring(view) == "TiredView" then return end
   for name, mod in pairs(package.loaded) do
     if mod == mt then
       return {
