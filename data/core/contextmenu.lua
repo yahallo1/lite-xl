@@ -85,7 +85,7 @@ end
 function ContextMenu:show(x, y, items, ...)
   local items_list = { width = 0, height = 0, arguments = { ... } }
   for _, item in ipairs(items) do
-    if item and (not item.command or command.is_valid(item.command, ...)) then
+    if item and (not item.command or command.is_valid(item.command, ...) or type(item.command) == "function") then
       table.insert(items_list, item)
     end
   end
